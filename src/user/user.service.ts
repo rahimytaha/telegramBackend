@@ -13,4 +13,7 @@ export class UserService {
     const data = await this.userRepository.find()
     return data
   }
+  async create (){
+    const newUser =this.userRepository.create({})
+  }
 }

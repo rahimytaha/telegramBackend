@@ -8,4 +8,5 @@ export class UserController {
   all() {
     return this.userService.findAll();
   }
+  
 }
