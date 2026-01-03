@@ -5,6 +5,8 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserEntity } from 'src/entities/user.entity';
 import { AllUserQueryDto } from './dto/allUserQuery.dto';
 import { ResponseDto } from 'src/common/dto/response.dto';
+import { UserPayload } from 'src/common/decorator/user.decorator';
+import type { TUserTypePayload } from 'src/common/types/userPayload.type';
 
 @Controller()
 export class UserController {
@@ -20,5 +22,11 @@ export class UserController {
   @Post('create')
   create(@Body() createDto: CreateUserDto) {
     return this.userService.create(createDto);
+  }
+  @ApiResponse({ type: () => ResponseDto<UserEntity>, status: 200 })
+  @ApiOperation({ summary: 'Get my profile' })
+  @Get('myProfile')
+  myProfile(@UserPayload() user: TUserTypePayload) {
+    return this.userService.findById(user.id);
   }
 }

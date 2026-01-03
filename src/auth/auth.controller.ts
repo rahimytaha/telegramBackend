@@ -4,7 +4,8 @@ import { SignInDto } from './dto/signIn.dto';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/createUser.dto';
 import { ResponseDto } from 'src/common/dto/response.dto';
-
+import { PublicRoute } from './authPublic.decorator';
+@PublicRoute()
 @Controller()
 export class AuthController {
   constructor(private authService: AuthService) {}

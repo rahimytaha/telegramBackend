@@ -3,9 +3,11 @@ import { Module } from '@nestjs/common';
 import { GetwayModule } from './getway/getway.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
-import { RouterModule, Routes } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, RouterModule, Routes } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { AuthGuard } from './auth/auth.guard';
+import { JwtModule } from '@nestjs/jwt';
 const routes: Routes = [
   { path: '/user', module: UserModule },
   { path: '/auth', module: AuthModule },
@@ -14,6 +16,7 @@ const routes: Routes = [
   imports: [
     AuthModule,
     GetwayModule,
+    JwtModule.register({secret:"123",signOptions:{expiresIn:"7d"}}),
     UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -32,6 +35,6 @@ const routes: Routes = [
     }),
   ],
   controllers: [],
-  providers: [],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}

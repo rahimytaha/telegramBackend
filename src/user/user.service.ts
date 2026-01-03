@@ -11,6 +11,13 @@ export class UserService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
   ) {}
+  async findById(id: number): Promise<UserEntity> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('user could not found');
+    }
+    return user;
+  }
   async findAll(query: AllUserQueryDto): Promise<UserEntity[]> {
     const data = await this.userRepository.find({
       skip: (query.page - 1) * query.perPage,
