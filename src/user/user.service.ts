@@ -11,7 +11,7 @@ export class UserService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
   ) {}
-  async findAll(query: AllUserQueryDto) {
+  async findAll(query: AllUserQueryDto): Promise<UserEntity[]> {
     const data = await this.userRepository.find({
       skip: (query.page - 1) * query.perPage,
       take: query.perPage * query.page,
@@ -26,8 +26,12 @@ export class UserService {
     email?: string,
     username?: string,
     shouldExist: boolean = true,
+    havePassword: boolean = true,
   ): Promise<UserEntity | undefined> {
-    const user = await this.userRepository.findOneBy({ email, username });
+    const user = await this.userRepository.findOne({
+      where: { email, username },
+      select: { password: havePassword },
+    });
     if (shouldExist) {
       if (!user) {
         throw new NotFoundException('user could not found');
