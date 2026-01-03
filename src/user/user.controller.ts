@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/createUser.dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserEntity } from 'src/entities/user.entity';
 import { AllUserQueryDto } from './dto/allUserQuery.dto';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { UserPayload } from 'src/common/decorator/user.decorator';
 import type { TUserTypePayload } from 'src/common/types/userPayload.type';
-
+@ApiBearerAuth('JWT-auth')
 @Controller()
 export class UserController {
   constructor(private userService: UserService) {}
