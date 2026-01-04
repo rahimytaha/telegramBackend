@@ -62,14 +62,18 @@ export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('message')
-  onSendMessage(
-    @MessageBody() data: { roomId: string; text: string },
+  async onSendMessage(
+    @MessageBody() data: { roomId: number; text: string },
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data.user.id;
-    console.log(data.roomId, typeof data.roomId);
-
-    this.server.in(data.roomId).emit('newMessage', 'message');
+    const message = await this.getwayService.sendMessage(
+      userId,
+      data.roomId,
+      data.text,
+    );
+    if (message) {
+      this.server.in(data.roomId.toString()).emit('newMessage', message);
+    }
   }
-
 }
