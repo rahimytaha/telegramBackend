@@ -66,20 +66,10 @@ export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { roomId: string; text: string },
     @ConnectedSocket() client: Socket,
   ) {
+    const userId = client.data.user.id;
     console.log(data.roomId, typeof data.roomId);
 
-    this.server.in(data.roomId).emit('joined', 'message');
+    this.server.in(data.roomId).emit('newMessage', 'message');
   }
-  @SubscribeMessage('leave')
-  onLeave(@MessageBody() roomId: any, @ConnectedSocket() client: Socket) {
-    const safeRoomId = roomId.toString();
 
-    client.leave(safeRoomId); // از اتاق خارج می‌شه
-
-    // به بقیه تو اتاق بگو که یکی رفت (اختیاری)
-    this.server.in(safeRoomId).emit('left', {
-      message: 'کاربری از اتاق خارج شد',
-      userId: client.data.user.sub,
-    });
-  }
 }
