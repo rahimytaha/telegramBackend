@@ -24,7 +24,7 @@ export class AuthService {
     if (!existUser) throw new NotFoundException('user could not found');
     if (existUser.password !== data.password)
       throw new BadRequestException('password is wrong');
-    return { token: this.jwtService.sign({ id: existUser.id }) };
+    return { token: this.jwtService.sign({ id: existUser.id}) };
   }
   async signUp(data: CreateUserDto): Promise<{ token: string }> {
     await this.userService.findBy(undefined, data.username, false);

@@ -37,7 +37,7 @@ export class UserService {
   ): Promise<UserEntity | undefined> {
     const user = await this.userRepository.findOne({
       where: { email, username },
-      select: { password: havePassword },
+      select: { password: havePassword,id:havePassword },
     });
     if (shouldExist) {
       if (!user) {

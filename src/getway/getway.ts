@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -7,40 +7,60 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsGuard } from 'src/auth/ws.guard';
+import { JoinRoomDto } from './dto/joinRoom.dto';
 
-@UseGuards(WsGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
 })
 export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
+  private rooms = [
+    { id: 1, isUser: true, users: [1, 2], message: [], name: undefined },
+    { id: 1, isUser: true, users: [1, 2], message: [], name: '' },
+  ];
+  private users = [
+    { id: 1, name: 'taha' },
+    { id: 2, name: 'akbar' },
+  ];
   @WebSocketServer()
   server: Server;
 
   handleConnection(client: Socket) {
-
+    console.log('two');
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: Socket) {}
 
-  }
-
-
-  @SubscribeMessage('join')
-  onJoin(@MessageBody() roomId: string, @ConnectedSocket() client: Socket) {
-    roomId = roomId.toString();
-
-    client.join(roomId);
-    console.log(client.data);
-    console.log(roomId, typeof roomId);
-    this.server.in(roomId).emit('joined', {
-      message: 'کاربری به اتاق جوین شد',
-      userId: client.data.user.id || 'no id',
+  @UseGuards(WsGuard)
+  @SubscribeMessage('myRooms')
+  onJoin(@ConnectedSocket() client: Socket) {
+    const userId = client.data.user.id;
+    let rooms = this.rooms.filter((el) => el.users.find((e) => e == userId));
+    let convertedRooms = rooms.map((el) => {
+      let payload = { roomId: el.id, isUser: el.isUser, name: el?.name };
+      if (el.isUser) {
+        const roomUserId = el.users.find((el) => el != userId);
+        const roomUser = this.users.find((el) => el.id == roomUserId);
+        payload['name'] = roomUser?.name;
+      }
+      return payload;
     });
+    client.emit('myRoomsList', convertedRooms);
+
+    // client.disconnect(true);
+    // client.join(roomId);
+    // console.log(client.data);
+    // console.log(roomId, typeof roomId);
+
+    // this.server.in(roomId).emit('joined', {
+    //   message: 'کاربری به اتاق جوین شد',
+    //   userId: client.data.user.id || 'no id',
+    // });
   }
 
   @SubscribeMessage('message')
@@ -51,5 +71,17 @@ export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(data.roomId, typeof data.roomId);
 
     this.server.in(data.roomId).emit('joined', 'message');
+  }
+  @SubscribeMessage('leave')
+  onLeave(@MessageBody() roomId: any, @ConnectedSocket() client: Socket) {
+    const safeRoomId = roomId.toString();
+
+    client.leave(safeRoomId); // از اتاق خارج می‌شه
+
+    // به بقیه تو اتاق بگو که یکی رفت (اختیاری)
+    this.server.in(safeRoomId).emit('left', {
+      message: 'کاربری از اتاق خارج شد',
+      userId: client.data.user.sub,
+    });
   }
 }

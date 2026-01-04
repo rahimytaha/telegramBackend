@@ -11,7 +11,8 @@ export class WsGuard implements CanActivate {
 
     const token =
       client.handshake.auth?.token || client.handshake.headers['authorization'];
-    console.log(token);
+    // console.log('first', token);
+    // console.log(token);
     if (!token || !token.startsWith('Bearer ')) {
       client.disconnect();
       return false;
@@ -19,11 +20,12 @@ export class WsGuard implements CanActivate {
 
     try {
       const realToken = token.split(' ')[1];
-      const payload = this.jwtService.verify(realToken,{secret:"123"});
+      const payload = this.jwtService.verify(realToken, { secret: '123' });
+      console.log(payload.id)
       client.data.user = payload;
       return true;
     } catch (error) {
-        console.log(error)
+      console.log(error);
       client.disconnect();
       return false;
     }
