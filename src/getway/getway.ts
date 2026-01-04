@@ -12,6 +12,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { WsGuard } from 'src/auth/ws.guard';
 import { JoinRoomDto } from './dto/joinRoom.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   cors: {
@@ -19,6 +20,8 @@ import { JoinRoomDto } from './dto/joinRoom.dto';
   },
 })
 export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
+    constructor(private jwtService: JwtService) {}
+  
   private rooms = [
     { id: 1, isUser: true, users: [1, 2], message: [], name: undefined },
     { id: 1, isUser: true, users: [1, 2], message: [], name: '' },
@@ -31,7 +34,23 @@ export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log('two');
+    const token = client.handshake.auth?.token || client.handshake.headers['authorization'];
+
+    if (!token || !token.startsWith('Bearer ')) {
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const realToken = token.split(' ')[1];
+      const payload = this.jwtService.verify(realToken,{secret:"123"}); 
+      client.data.user = payload; 
+
+      console.log("user connected", client.data.user);
+    } catch (error) {
+      console.log("error auth:", error.message);
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {}
@@ -51,16 +70,6 @@ export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
       return payload;
     });
     client.emit('myRoomsList', convertedRooms);
-
-    // client.disconnect(true);
-    // client.join(roomId);
-    // console.log(client.data);
-    // console.log(roomId, typeof roomId);
-
-    // this.server.in(roomId).emit('joined', {
-    //   message: 'کاربری به اتاق جوین شد',
-    //   userId: client.data.user.id || 'no id',
-    // });
   }
 
   @SubscribeMessage('message')
@@ -84,4 +93,6 @@ export class MyGetway implements OnGatewayConnection, OnGatewayDisconnect {
       userId: client.data.user.sub,
     });
   }
+
+
 }
